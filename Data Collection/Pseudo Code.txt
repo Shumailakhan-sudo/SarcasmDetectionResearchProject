@@ -1,0 +1,56 @@
+# Import required libraries
+import tweepy
+import csv
+
+# Define a function to authenticate with Twitter API
+function authenticate(consumer_key, consumer_secret, access_key, access_secret):
+    auth = tweepy.OAuthHandler(consumer_key, consumer_secret)
+    auth.set_access_token(access_key, access_secret)
+    return tweepy.API(auth, wait_on_rate_limit=True)
+
+# Define a function to save tweet data to CSV
+function save_tweets_to_csv(api, search_words, numb):
+    # Define the header for the CSV file
+    header = ['Date', 'username', 'tweet', 'followers_count', 'Location']
+
+    # Open the CSV file in append mode and create a CSV writer object
+    csvFile = open(search_words + '.csv', 'a', encoding="utf-8")
+    csvWriter = csv.writer(csvFile)
+
+    # Write the header row to the CSV file
+    csvWriter.writerow(header)
+
+    # Get the number of tweets to search for
+    num_tweets = int(input('Number of Tweets: '))
+
+    # Create a new_search query string to exclude retweets
+    new_search = search_words + " -filter:retweets"
+
+    # Loop through the tweets using the Twitter API search and save relevant data to the CSV file
+    for tweet in tweepy.Cursor(api.search_tweets, q=new_search, lang="ur", since_id=0, tweet_mode='extended').items(num_tweets):
+        # Process the tweet data and write to the CSV file
+        csvWriter.writerow([
+            tweet.created_at,
+            tweet.user.screen_name,
+            tweet.full_text.replace('\n', '').encode('utf-8').decode('unicode-escape').encode('latin1').decode('utf-8'),
+            tweet.user.followers_count,
+            tweet.user.location.encode('utf-8').decode('unicode-escape').encode('latin1').decode('utf-8')
+        ])
+
+# Main program
+function main():
+    # Get the search keyword from the user
+    search_words = input("Enter the Keyword with hash : ")
+
+    # Get the Twitter API keys and access tokens from credentials.py
+    consumer_key, consumer_secret, access_key, access_secret = get_twitter_keys_from_credentials()
+
+    # Authenticate with Twitter API
+    api = authenticate(consumer_key, consumer_secret, access_key, access_secret)
+
+    # Get the number of tweets and save them to CSV
+    numb = int(input('Number of Tweets: '))
+    save_tweets_to_csv(api, search_words, numb)
+
+# Call the main function to start the program
+main()
